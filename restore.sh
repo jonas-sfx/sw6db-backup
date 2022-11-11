@@ -21,7 +21,7 @@ if test -f "archive/$1.tar.gz"; then
     cd archive/
     tar -xzf $1.tar.gz
     sed 's/\sDEFINER=`[^`]*`@`[^`]*`//g' -i last-dump.sql
-    mysql  -u"$USER" -p"$PASSWORD" -h"$HOST" -P $PORT $DB < last-dump.sql
+    mysql  --default-character-set=utf8mb4 -u"$USER" -p"$PASSWORD" -h"$HOST" -P $PORT $DB < last-dump.sql
     # echo "mysql  -u\"$USER\" -p\"$PASSWORD\" -h\"$HOST\" -P $PORT $DB < last-dump.sql"
     rm last-dump.sql
     exit 0
