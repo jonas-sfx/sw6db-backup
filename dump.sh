@@ -5,16 +5,16 @@
 ## author:      jonas@sfxonline.de
 ## =======================================================================
 
-cd "$(dirname "$0")"
+cd "$(dirname "$0")" || exit
 
 # CREDENTIALS
 MYSQL=$(grep -Po 'DATABASE_URL=\K.*' ../project-root/.env)
-USER="$(echo $MYSQL | grep -Po 'mysql://\K[^:]+')"
+USER="$(echo "$MYSQL" | grep -Po 'mysql://\K[^:]+')"
 pwdgrep="mysql://$USER:\K[^@]+"
-PASSWORD="$(echo $MYSQL | grep -Po $pwdgrep)"
-HOST="$(echo $MYSQL | grep -oP '@[^:\/]+' | cut -d@ -f2)"
-PORT="$(echo $MYSQL | grep -oP '@.*:[0-9]+' | cut -d: -f2)"
-DB="$(echo $MYSQL | grep -oP '/[^\/]+$' | cut -d/ -f2)"
+PASSWORD="$(echo "$MYSQL" | grep -Po "$pwdgrep")"
+HOST="$(echo "$MYSQL" | grep -oP '@[^:\/]+' | cut -d@ -f2)"
+PORT="$(echo "$MYSQL" | grep -oP '@.*:[0-9]+' | cut -d: -f2)"
+DB="$(echo "$MYSQL" | grep -oP '/[^\/]+$' | cut -d/ -f2)"
 
 STR_WEEKDAY=$(date +%a)".tar.gz"
 STR_WEEK=$(date +%U)".tar.gz"
@@ -26,7 +26,7 @@ MAKED=0
 
 if test -f "archive/$STR_WEEKDAY"; then
     echo "$STR_WEEKDAY exists."
-    if [ `stat --format=%Y archive/$STR_WEEKDAY` -le $(( `date +%s` - 3600*24*6 )) ]; then 
+    if [ $(stat --format=%Y archive/"$STR_WEEKDAY") -le $(( $(date +%s) - 3600*24*6 )) ]; then 
         echo "$STR_WEEKDAY to old."
         MAKED=1
     fi
@@ -37,7 +37,7 @@ fi
 
 if test -f "archive/$STR_WEEK"; then
     echo "$STR_WEEK exists."
-    if [ `stat --format=%Y archive/$STR_WEEK` -le $(( `date +%s` - 3600*24*350 )) ]; then 
+    if [ $(stat --format=%Y archive/"$STR_WEEK") -le $(( $(date +%s) - 3600*24*350 )) ]; then 
         echo "$STR_WEEK to old."
         MAKEW=1
     fi
@@ -48,7 +48,7 @@ fi
 
 # MAKE THE DUMPs you need.
 if [[ $(($MAKEW  + $MAKED)) -gt 0 ]]; then
-  $MYSQLDUMP -u"$USER" -p"$PASSWORD" -h"$HOST" -P $PORT --no-tablespaces --hex-blob $DB > last-dump.sql
+  $MYSQLDUMP -u"$USER" -p"$PASSWORD" -h"$HOST" -P "$PORT" --no-tablespaces --hex-blob "$DB" > last-dump.sql
 
   if [ $MAKEW -gt 0 ]; then
     tar -czf "archive/$STR_WEEK" last-dump.sql
